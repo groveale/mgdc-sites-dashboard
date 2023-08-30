@@ -1,5 +1,7 @@
 using Azure.Identity;
 using Microsoft.Graph;
+using Microsoft.Graph.Groups.Item.Planner.Plans.Item.Buckets.Item.Tasks;
+using Microsoft.Graph.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,13 +54,56 @@ namespace groveale
             }
         }
 
+        public static async Task<SiteAdditionalDataItem> GetSitesDrives(string siteId)
+        {
+            // Ensure client isn't null
+            _ = _appClient ?? 
+                throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
+
+            string[] selectProperties = { "name","driveType","quota","id","webUrl" }; 
+
+            // Do we need to first recurse and get all the subsites?
+
+            var drives = new List<Drive>();
+            var result = await _appClient.Sites[siteId].Drives.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Select = selectProperties;
+                // Should really page but we are being lazy
+                requestConfiguration.QueryParameters.Top = 999;
+            });
+
+            // Initialize the site additional data item 
+            var siteAdditionalDataItem = new SiteAdditionalDataItem { SiteId = siteId };
+
+            // Go through the drives and get the size of each
+            long totalSize = 0;
+            int totalDrives = 0;
+            foreach (var drive in result.Value)
+            {
+                if (drive.WebUrl.EndsWith("PreservationHoldLibrary"))
+                {
+                    siteAdditionalDataItem.SiteHasPreservationHold = true;
+                    siteAdditionalDataItem.StorageUsedPreservationHold = drive.Quota?.Used ?? 0;
+                    continue;
+                }
+
+                totalDrives++;
+                totalSize += drive.Quota?.Used ?? 0;
+            }
+
+            siteAdditionalDataItem.NumberOfDrives = totalDrives;
+            siteAdditionalDataItem.StorageUsedInDrives = totalSize;
+
+            return siteAdditionalDataItem;
+        }
+
         public static async Task<List<SiteReportItem>> GetSiteUserActivityReport()
         {
             // Ensure client isn't null
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
-            string[] selectProperties = { "id","parentReference" }; 
+            
 
             // Get the SharePoint site usage detail (D30 is the last 30 days) but will still report on the last activity
             var result = await _appClient.Reports.GetSharePointSiteUsageDetailWithPeriod("D30")
