@@ -97,7 +97,7 @@ namespace groveale
             return siteAdditionalDataItem;
         }
 
-        public static async Task<List<SiteReportItem>> GetSiteUserActivityReport()
+        public static async Task<List<SiteReportItem>> GetSiteUserActivityReport(string period = "D30")
         {
             // Ensure client isn't null
             _ = _appClient ??
@@ -106,7 +106,7 @@ namespace groveale
             
 
             // Get the SharePoint site usage detail (D30 is the last 30 days) but will still report on the last activity
-            var result = await _appClient.Reports.GetSharePointSiteUsageDetailWithPeriod("D30")
+            var result = await _appClient.Reports.GetSharePointSiteUsageDetailWithPeriod(period)
                 .GetAsync();
 
             // result is a CSV file which we convert to a list of objects

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public class SiteAdditionalDataItem
 {
     public string SiteId { get; set; }
@@ -9,5 +11,9 @@ public class SiteAdditionalDataItem
     // Can't get this data from the Graph API
     public int NumberOfLists { get; set; }
     public int NumberOfItemsInLists { get; set; }
+
+    public long RecycleBinSize { get; set; }
+
+    public List<ListDetails> Lists { get; set; }
 }
     

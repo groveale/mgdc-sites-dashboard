@@ -31,7 +31,8 @@ namespace groveale
             }
 
             // First we need to get all drives for the site
-            try {
+            try 
+            {
                 // Load settings and initialize GraphHelper with app only auth
                 // Method also extracts the required MSGraph data from the spItemURL
                 var settings = Settings.LoadSettings();
@@ -39,6 +40,14 @@ namespace groveale
                 GraphHelper.InitializeGraphForAppOnlyAuth(settings);
 
                 var sites = await GraphHelper.GetSitesDrives(siteId);
+
+                // Let's also get the library info
+                // Size, number of files, last modified, retention policy?
+
+                // Recycle Bin Size
+
+
+                // Member Info? - Probably should use the sharing object dataset for this
 
                 return new OkObjectResult(sites);
             }

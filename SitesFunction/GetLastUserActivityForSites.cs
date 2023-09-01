@@ -12,18 +12,25 @@ namespace groveale
 {
     public static class LastUserActivity
     {
-        [FunctionName("LastUserActivity")]
+        [FunctionName("GetLastUserActivityForSites")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            string name = req.Query["name"];
+
+            string timePeriod = req.Query["timePeriod"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            timePeriod = timePeriod ?? data?.timePeriod;
+
+            // The main thing time period effects is the active file count for a site
+            if (timePeriod != "D7" || timePeriod != "D30" || timePeriod != "D90" || timePeriod != "D180")
+            {
+                return new BadRequestObjectResult("Please pass a valid timePeriod on the query string or in the request body - Valid options are D7, D30, D90, D180");
+            }
 
             try
             {
@@ -33,7 +40,7 @@ namespace groveale
                 
                 GraphHelper.InitializeGraphForAppOnlyAuth(settings);
 
-                var sites = await GraphHelper.GetSiteUserActivityReport();
+                var sites = await GraphHelper.GetSiteUserActivityReport(timePeriod);
 
                 return new OkObjectResult(sites);
 
