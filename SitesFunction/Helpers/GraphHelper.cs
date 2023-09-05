@@ -73,13 +73,28 @@ namespace groveale
             });
 
             // Initialize the site additional data item 
-            var siteAdditionalDataItem = new SiteAdditionalDataItem { SiteId = siteId };
+            var siteAdditionalDataItem = new SiteAdditionalDataItem { SiteId = siteId, Lists = new List<ListDetails>() };
 
             // Go through the drives and get the size of each
             long totalSize = 0;
             int totalDrives = 0;
+            long totalRecycleBinSize = 0;
             foreach (var drive in result.Value)
             {
+                var list = new ListDetails 
+                {
+                    ListName = drive.Name,
+                    ListType = drive.DriveType,
+                    ListSizeUsed = drive.Quota?.Used ?? 0,
+                    ListDeletedItemsSize = drive.Quota?.Deleted ?? 0,
+                    ListUrl = drive.WebUrl,
+                    ListCreatedDate = drive.CreatedDateTime ?? DateTime.MinValue,
+                    ListLastItemModifiedDate = drive.LastModifiedDateTime ?? DateTime.MinValue
+                };
+
+                // Add the list to the site additional data item
+                siteAdditionalDataItem.Lists.Add(list);
+
                 if (drive.WebUrl.EndsWith("PreservationHoldLibrary"))
                 {
                     siteAdditionalDataItem.SiteHasPreservationHold = true;
@@ -88,15 +103,55 @@ namespace groveale
                 }
 
                 totalDrives++;
-                totalSize += drive.Quota?.Used ?? 0;
+
+                // We don't want to inlcude deletedSize items in the total size
+                // This will be the recycle bin size
+                totalSize += list.ListSizeUsed - list.ListDeletedItemsSize;
+                totalRecycleBinSize += list.ListDeletedItemsSize;
             }
 
             siteAdditionalDataItem.NumberOfDrives = totalDrives;
             siteAdditionalDataItem.StorageUsedInDrives = totalSize;
+            siteAdditionalDataItem.RecycleBinSize = totalRecycleBinSize;
 
             return siteAdditionalDataItem;
         }
 
+        public static async Task<bool> IsSiteOrphaned(string siteId)
+        {
+            // Ensure client isn't null
+            _ = _appClient ?? 
+                throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
+
+            string[] selectProperties = { "owner" }; 
+
+            // Get the site owner (Drive has the Site Owner (Admin))
+            var ownerDetails = await _appClient.Sites[siteId].Drive.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Select = selectProperties;
+            });
+
+            // The site has a user as the owner (non group connected site)
+            if (ownerDetails.Owner.User != null)
+            {
+                
+                return false;
+            }
+            else if (ownerDetails.Owner.AdditionalData != null && ownerDetails.Owner.AdditionalData.ContainsKey("group") && ownerDetails.Owner.AdditionalData["group"] != null)
+            {
+                // The site is connected to a group
+                //var groupId = ownerDetails.Owner.AdditionalData["group"]
+
+                var result = await _appClient.Groups["{group-id}"].Owners.GetAsync();
+                // Get detials of the group and check owners
+                return false;
+            }
+            else
+            {
+                // The has no user or group set as owner so must be orphaned
+                return true;
+            }     
+        }
         public static async Task<List<SiteReportItem>> GetSiteUserActivityReport(string period = "D30")
         {
             // Ensure client isn't null

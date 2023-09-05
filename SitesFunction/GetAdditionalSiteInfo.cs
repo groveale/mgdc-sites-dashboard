@@ -20,14 +20,21 @@ namespace groveale
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             string siteId = req.Query["siteId"];
+            string siteUrl = req.Query["siteUrl"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             siteId = siteId ?? data?.siteId;
+            siteUrl = siteUrl ?? data?.siteUrl;
 
             if (string.IsNullOrEmpty(siteId))
             {
                 return new BadRequestObjectResult("Please pass a siteId on the query string or in the request body");
+            }
+
+            if (string.IsNullOrEmpty(siteUrl))
+            {
+                return new BadRequestObjectResult("Please pass a siteUrl on the query string or in the request body");
             }
 
             // First we need to get all drives for the site
@@ -39,17 +46,24 @@ namespace groveale
                 
                 GraphHelper.InitializeGraphForAppOnlyAuth(settings);
 
-                var sites = await GraphHelper.GetSitesDrives(siteId);
+                // We can infer the recycle bin size from the site object
+                var siteDetails = await GraphHelper.GetSitesDrives(siteId);
 
-                // Let's also get the library info
-                // Size, number of files, last modified, retention policy?
+                // Check if the sites owner(s) exist
+                siteDetails.IsOrphaned = await GraphHelper.IsSiteOrphaned(siteId);
 
-                // Recycle Bin Size
+                // Dropping into CSOM (to get list details)
+                var spoAuth = new SPOAuthHelper(siteUrl, settings);
 
+                for (int i = 0; i < siteDetails.Lists.Count; i++)
+                {
+                    var updatedListDetails = SPOHelper.GetListDetails(spoAuth.clientContext, siteDetails.Lists[i]);
 
-                // Member Info? - Probably should use the sharing object dataset for this
+                    // Update the list details (not best practice but we are being lazy)
+                    siteDetails.Lists[i] = updatedListDetails;
+                }
 
-                return new OkObjectResult(sites);
+                return new OkObjectResult(siteDetails);
             }
             catch (System.Exception ex)
             {
