@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using groveale;
 
 public class SiteAdditionalDataItem
 {
@@ -7,12 +8,8 @@ public class SiteAdditionalDataItem
     public long StorageUsedInDrives { get; set; }
     public bool SiteHasPreservationHold { get; set; }
     public long StorageUsedPreservationHold { get; set; }
-
-    // Can't get this data from the Graph API
-    public int NumberOfLists { get; set; }
-    public int NumberOfItemsInLists { get; set; }
-
     public long RecycleBinSize { get; set; }
+    public bool IsOrphaned { get; set; }
 
     public List<ListDetails> Lists { get; set; }
 }
