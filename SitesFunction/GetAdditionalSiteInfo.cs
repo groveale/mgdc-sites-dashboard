@@ -21,11 +21,15 @@ namespace groveale
 
             string siteId = req.Query["siteId"];
             string siteUrl = req.Query["siteUrl"];
+            string primaryAdminId = req.Query["primaryAdminId"];
+            string secondaryAdminId = req.Query["secondaryAdminId"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             siteId = siteId ?? data?.siteId;
             siteUrl = siteUrl ?? data?.siteUrl;
+            primaryAdminId = primaryAdminId ?? data?.primaryAdminId;
+            secondaryAdminId = secondaryAdminId ?? data?.secondaryAdminId;
 
             if (string.IsNullOrEmpty(siteId))
             {
@@ -50,7 +54,7 @@ namespace groveale
                 var siteDetails = await GraphHelper.GetSitesDrives(siteId);
 
                 // Check if the sites owner(s) exist
-                siteDetails.IsOrphaned = await GraphHelper.IsSiteOrphaned(siteId);
+                siteDetails.IsOrphaned = await GraphHelper.IsSiteOrphaned(siteId, primaryAdminId, secondaryAdminId);
 
                 // Dropping into CSOM (to get list details)
                 var spoAuth = new SPOAuthHelper(siteUrl, settings);

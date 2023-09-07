@@ -16,7 +16,7 @@ namespace groveale
         public int ListItemCount { get; set; }
         public long ListSizeUsed { get; set; }
         // List items that are in the recycle bin 
-        public long ListDeletedItemsSize { get; set; }
+        public long  ListDeletedItemsSize{ get; set; }
         public int ListMajorVersionCount { get; set; }
         public int ListMinorVersionCount { get; set; }
         public bool ListHasUniquePermissions { get; set; }

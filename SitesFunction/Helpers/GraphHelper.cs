@@ -2,6 +2,7 @@ using Azure.Identity;
 using Microsoft.Graph;
 using Microsoft.Graph.Groups.Item.Planner.Plans.Item.Buckets.Item.Tasks;
 using Microsoft.Graph.Models;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,7 +61,7 @@ namespace groveale
             _ = _appClient ?? 
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
-            string[] selectProperties = { "name","driveType","quota","id","webUrl" }; 
+            string[] selectProperties = { "name","driveType","quota","id","webUrl", "createdDateTime", "lastModifiedDateTime" }; 
 
             // Do we need to first recurse and get all the subsites?
 
@@ -84,6 +85,8 @@ namespace groveale
                 var list = new ListDetails 
                 {
                     ListName = drive.Name,
+                    DriveId = drive.Id,
+                    SiteId = siteId,
                     ListType = drive.DriveType,
                     ListSizeUsed = drive.Quota?.Used ?? 0,
                     ListDeletedItemsSize = drive.Quota?.Deleted ?? 0,
@@ -117,41 +120,81 @@ namespace groveale
             return siteAdditionalDataItem;
         }
 
-        public static async Task<bool> IsSiteOrphaned(string siteId)
+        public static async Task<bool> DoesUserExist(string userId)
+        {
+            try 
+            {
+                var user = await _appClient.Users[userId].GetAsync();
+                return true;
+            }
+            catch
+            {
+                // User doesn't exist
+                return false;
+            }
+        }
+
+        public static async Task<bool> DoesGroupExist(string groupId)
+        {
+            try 
+            {
+                var group = await _appClient.Groups[groupId].GetAsync();
+                return true;
+            }
+            catch
+            {
+                // Group doesn't exist
+                return false;
+            }
+        }
+
+        public static async Task<bool> IsSiteOrphaned(string siteId, string primaryAdminId, string secondaryAdminId)
         {
             // Ensure client isn't null
             _ = _appClient ?? 
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
-            string[] selectProperties = { "owner" }; 
+            // Add the Ids to a list - can be empty
+            List<string> admins = new List<string>{primaryAdminId, secondaryAdminId};
 
-            // Get the site owner (Drive has the Site Owner (Admin))
-            var ownerDetails = await _appClient.Sites[siteId].Drive.GetAsync((requestConfiguration) =>
+            foreach (var admin in admins)
             {
-                requestConfiguration.QueryParameters.Select = selectProperties;
-            });
+                if (string.IsNullOrEmpty(admin))
+                {
+                    continue;
+                }
 
-            // The site has a user as the owner (non group connected site)
-            if (ownerDetails.Owner.User != null)
-            {
-                
-                return false;
+                // Does the user exist?
+                if (await DoesUserExist(admin))
+                {
+                    // User exists so site not orphaned
+                    return false;
+                }
+
+                // Does the group exist?
+                if (await DoesGroupExist(admin))
+                {
+                    // Group exists now check the owners
+                    // Get Group Owners as Group Owners are the site Owners
+                    var owners = await _appClient.Groups[admin].Owners.GetAsync();
+
+                    // Check Owners exist
+                    foreach (var owner in owners.Value)
+                    {
+                        // Does the owner exist?
+                        if (await DoesUserExist(owner.Id))
+                        {
+                            // Owner exists so site not orphaned
+                            return false;
+                        }
+                    }
+                }
             }
-            else if (ownerDetails.Owner.AdditionalData != null && ownerDetails.Owner.AdditionalData.ContainsKey("group") && ownerDetails.Owner.AdditionalData["group"] != null)
-            {
-                // The site is connected to a group
-                //var groupId = ownerDetails.Owner.AdditionalData["group"]
 
-                var result = await _appClient.Groups["{group-id}"].Owners.GetAsync();
-                // Get detials of the group and check owners
-                return false;
-            }
-            else
-            {
-                // The has no user or group set as owner so must be orphaned
-                return true;
-            }     
+            // Admins have been checked so Site is orphaned
+            return true;
         }
+
         public static async Task<List<SiteReportItem>> GetSiteUserActivityReport(string period = "D30")
         {
             // Ensure client isn't null
