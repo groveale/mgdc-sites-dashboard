@@ -27,7 +27,7 @@ namespace groveale
             timePeriod = timePeriod ?? data?.timePeriod;
 
             // The main thing time period effects is the active file count for a site
-            if (timePeriod != "D7" || timePeriod != "D30" || timePeriod != "D90" || timePeriod != "D180")
+            if (timePeriod != "D7" && timePeriod != "D30" && timePeriod != "D90" && timePeriod != "D180")
             {
                 return new BadRequestObjectResult("Please pass a valid timePeriod on the query string or in the request body - Valid options are D7, D30, D90, D180");
             }

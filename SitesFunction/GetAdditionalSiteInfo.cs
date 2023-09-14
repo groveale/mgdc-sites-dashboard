@@ -59,9 +59,14 @@ namespace groveale
                 // Dropping into CSOM (to get list details)
                 var spoAuth = new SPOAuthHelper(siteUrl, settings);
 
+
+
                 for (int i = 0; i < siteDetails.Lists.Count; i++)
                 {
                     var updatedListDetails = SPOHelper.GetListDetails(spoAuth.clientContext, siteDetails.Lists[i]);
+
+                    // Append the list item count to site item count
+                    siteDetails.NumberOfItemsInSite += updatedListDetails.ListItemCount; 
 
                     // Update the list details (not best practice but we are being lazy)
                     siteDetails.Lists[i] = updatedListDetails;

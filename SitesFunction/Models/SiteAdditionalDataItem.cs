@@ -10,6 +10,7 @@ public class SiteAdditionalDataItem
     public long StorageUsedPreservationHold { get; set; }
     public long RecycleBinSize { get; set; }
     public bool IsOrphaned { get; set; }
+    public int NumberOfItemsInSite { get; set; }
 
     public List<ListDetails> Lists { get; set; }
 }

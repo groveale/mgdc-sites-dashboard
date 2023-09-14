@@ -55,6 +55,21 @@ namespace groveale
             }
         }
 
+        private static async Task<long> GetDriveSize(string driveId) 
+        {
+            string[] selectProperties = { "size" }; 
+
+            // Get the drive
+            var driveRoot = await _appClient.Drives[driveId].Root.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Select = selectProperties;
+            });
+
+            // return the size of the root folder
+            return driveRoot.Size ?? 0;
+
+        }
+
         public static async Task<SiteAdditionalDataItem> GetSitesDrives(string siteId)
         {
             // Ensure client isn't null
@@ -74,7 +89,7 @@ namespace groveale
             });
 
             // Initialize the site additional data item 
-            var siteAdditionalDataItem = new SiteAdditionalDataItem { SiteId = siteId, Lists = new List<ListDetails>() };
+            var siteAdditionalDataItem = new SiteAdditionalDataItem { SiteId = siteId, Lists = new List<ListDetails>(), NumberOfItemsInSite = 0 };
 
             // Go through the drives and get the size of each
             long totalSize = 0;
@@ -82,17 +97,22 @@ namespace groveale
             long totalRecycleBinSize = 0;
             foreach (var drive in result.Value)
             {
-                var list = new ListDetails 
+                // for the fist drive we will record the delete size (recycle bin)
+                if (totalDrives == 0)
+                {
+                    siteAdditionalDataItem.RecycleBinSize = drive.Quota?.Deleted ?? 0;
+                }
+
+                var list = new ListDetails
                 {
                     ListName = drive.Name,
                     DriveId = drive.Id,
                     SiteId = siteId,
                     ListType = drive.DriveType,
-                    ListSizeUsed = drive.Quota?.Used ?? 0,
-                    ListDeletedItemsSize = drive.Quota?.Deleted ?? 0,
                     ListUrl = drive.WebUrl,
                     ListCreatedDate = drive.CreatedDateTime ?? DateTime.MinValue,
-                    ListLastItemModifiedDate = drive.LastModifiedDateTime ?? DateTime.MinValue
+                    ListLastItemModifiedDate = drive.LastModifiedDateTime ?? DateTime.MinValue,
+                    ListSizeUsed = await GetDriveSize(drive.Id)
                 };
 
                 // Add the list to the site additional data item
@@ -101,21 +121,17 @@ namespace groveale
                 if (drive.WebUrl.EndsWith("PreservationHoldLibrary"))
                 {
                     siteAdditionalDataItem.SiteHasPreservationHold = true;
-                    siteAdditionalDataItem.StorageUsedPreservationHold = drive.Quota?.Used ?? 0;
+                    siteAdditionalDataItem.StorageUsedPreservationHold = list.ListSizeUsed;
                     continue;
                 }
 
+                // We don't want to count the PHL Library
                 totalDrives++;
-
-                // We don't want to inlcude deletedSize items in the total size
-                // This will be the recycle bin size
-                totalSize += list.ListSizeUsed - list.ListDeletedItemsSize;
-                totalRecycleBinSize += list.ListDeletedItemsSize;
+                totalSize += list.ListSizeUsed;
             }
 
             siteAdditionalDataItem.NumberOfDrives = totalDrives;
             siteAdditionalDataItem.StorageUsedInDrives = totalSize;
-            siteAdditionalDataItem.RecycleBinSize = totalRecycleBinSize;
 
             return siteAdditionalDataItem;
         }
