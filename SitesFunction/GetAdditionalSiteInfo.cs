@@ -77,6 +77,20 @@ namespace groveale
             catch (System.Exception ex)
             {
                 log.LogError(ex.Message);
+                if (ex.Message.Contains("Microsoft.Graph.Models.ODataErrors.ODataError"))
+                {
+                    // cast ex to graph exception
+                    var graphEx = (Microsoft.Graph.Models.ODataErrors.ODataError)ex;
+                    if (graphEx.ResponseStatusCode == 423)
+                    {
+                        return new OkObjectResult(new SiteAdditionalDataItem { IsAccessLocked = true, SiteId = siteId, Lists = new System.Collections.Generic.List<ListDetails>() });
+                    }
+
+                    if (graphEx.ResponseStatusCode == 404)
+                    {
+                        return new OkObjectResult(new SiteAdditionalDataItem { IsInRecycleBin = true, SiteId = siteId, Lists = new System.Collections.Generic.List<ListDetails>() });
+                    }
+                }
                 return new BadRequestObjectResult(ex.Message);
             }
         }
