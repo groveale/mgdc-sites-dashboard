@@ -14,7 +14,10 @@ namespace groveale
         public DateTimeOffset ListCreatedDate { get; set; }
         public DateTimeOffset ListLastItemModifiedDate { get; set; }
         public int ListItemCount { get; set; }
-        public long ListSizeUsed { get; set; }
+        public long DriveSizeUsed { get; set; }
+        public long ListSizeTotalUsed { get; set; }
+        // TotalList size - DriveSizeUsed
+        public long PreviousVersionsSize { get; set; }
         // List items that are in the recycle bin 
         public long  ListDeletedItemsSize{ get; set; }
         public int ListMajorVersionCount { get; set; }

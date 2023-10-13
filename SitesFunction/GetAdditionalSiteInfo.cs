@@ -59,14 +59,20 @@ namespace groveale
                 // Dropping into CSOM (to get list details)
                 var spoAuth = new SPOAuthHelper(siteUrl, settings);
 
+                // Getting PnP Auth to get List metrics
+                // var pnpAuth = new PnPAuthHelper(siteUrl, settings);
+                // await pnpAuth.InitPnPHost();
 
+                // initialize the site details (previous versions size)
+                siteDetails.StoragePreviousVersionsInDrives = 0;
 
                 for (int i = 0; i < siteDetails.Lists.Count; i++)
                 {
-                    var updatedListDetails = SPOHelper.GetListDetails(spoAuth.clientContext, siteDetails.Lists[i]);
+                    var updatedListDetails = await SPOHelper.GetListDetails(spoAuth.clientContext, siteDetails.Lists[i]);
 
                     // Append the list item count to site item count
                     siteDetails.NumberOfItemsInSite += updatedListDetails.ListItemCount; 
+                    siteDetails.StoragePreviousVersionsInDrives += updatedListDetails.PreviousVersionsSize;
 
                     // Update the list details (not best practice but we are being lazy)
                     siteDetails.Lists[i] = updatedListDetails;
@@ -88,7 +94,7 @@ namespace groveale
 
                     if (graphEx.ResponseStatusCode == 404)
                     {
-                        return new OkObjectResult(new SiteAdditionalDataItem { IsInRecycleBin = true, SiteId = siteId, Lists = new System.Collections.Generic.List<ListDetails>() });
+                        return new OkObjectResult(new SiteAdditionalDataItem { IsDeleted = true, SiteId = siteId, Lists = new System.Collections.Generic.List<ListDetails>() });
                     }
                 }
                 return new BadRequestObjectResult(ex.Message);

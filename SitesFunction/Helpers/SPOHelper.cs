@@ -1,7 +1,13 @@
 using System;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.SharePoint.Client;
+using PnP.Core.Services;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace groveale
 {
@@ -25,7 +31,7 @@ namespace groveale
         }
 
 
-        public static ListDetails GetListDetails(ClientContext clientContext, ListDetails listDetail)
+        public static async Task<ListDetails> GetListDetails(ClientContext clientContext, ListDetails listDetail)
         {
             var list = clientContext.Web.Lists.GetByTitle(listDetail.ListName);
             clientContext.Load(list,
@@ -34,10 +40,19 @@ namespace groveale
                     l => l.MajorVersionLimit, 
                     l => l.MajorWithMinorVersionsLimit, 
                     l => l.HasUniqueRoleAssignments, 
-                    l => l.NoCrawl
+                    l => l.NoCrawl,
+                    l => l.RootFolder.ServerRelativeUrl
             );
-            
+
             clientContext.ExecuteQuery();
+
+            var token = clientContext.GetAccessToken();
+
+            
+
+            //var folderWithStorageMetrics = PnPContext.Web.GetFolderByServerRelativeUrlAsync(list.RootFolder.ServerRelativeUrl, f => f.StorageMetrics).GetAwaiter().GetResult();
+                
+            var storageMetrics = await GetFolderStorageMetrics(clientContext.Site.Url, list.RootFolder.ServerRelativeUrl, token);
 
             listDetail.ListId = list.Id.ToString();
             listDetail.ListItemCount = list.ItemCount;
@@ -45,8 +60,34 @@ namespace groveale
             listDetail.ListMinorVersionCount = list.MajorWithMinorVersionsLimit;
             listDetail.ListHasUniquePermissions = list.HasUniqueRoleAssignments;
             listDetail.IsIndexed = !list.NoCrawl;
+            listDetail.ListSizeTotalUsed = storageMetrics != null ? storageMetrics.TotalSize : 0;
+            listDetail.ListLastItemModifiedDate = storageMetrics.LastModified;
+            listDetail.PreviousVersionsSize = listDetail.ListSizeTotalUsed - listDetail.DriveSizeUsed;
 
             return listDetail;
         }
+
+        public static async Task<StorageMetrics> GetFolderStorageMetrics(string sharepointUrl, string folderUrl, string accessToken)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Add("Accept", "application/json;odata=verbose");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+
+                var apiUrl = sharepointUrl.TrimEnd('/') + $"/_api/web/getFolderByServerRelativeUrl('{folderUrl}')?$select=StorageMetrics&$expand=StorageMetrics";
+
+                var response = await client.GetAsync(apiUrl);
+                response.EnsureSuccessStatusCode();
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                dynamic data = JsonConvert.DeserializeObject(responseContent);
+
+                // object casting still neded
+                return data.d.StorageMetrics;
+            }
+        }
     }
+       
 }

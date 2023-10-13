@@ -112,7 +112,7 @@ namespace groveale
                     ListUrl = drive.WebUrl,
                     ListCreatedDate = drive.CreatedDateTime ?? DateTime.MinValue,
                     ListLastItemModifiedDate = drive.LastModifiedDateTime ?? DateTime.MinValue,
-                    ListSizeUsed = await GetDriveSize(drive.Id)
+                    DriveSizeUsed = await GetDriveSize(drive.Id)
                 };
 
                 // Add the list to the site additional data item
@@ -121,13 +121,13 @@ namespace groveale
                 if (drive.WebUrl.EndsWith("PreservationHoldLibrary"))
                 {
                     siteAdditionalDataItem.SiteHasPreservationHold = true;
-                    siteAdditionalDataItem.StorageUsedPreservationHold = list.ListSizeUsed;
+                    siteAdditionalDataItem.StorageUsedPreservationHold = list.DriveSizeUsed;
                     continue;
                 }
 
                 // We don't want to count the PHL Library
                 totalDrives++;
-                totalSize += list.ListSizeUsed;
+                totalSize += list.DriveSizeUsed;
             }
 
             siteAdditionalDataItem.NumberOfDrives = totalDrives;

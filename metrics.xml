@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<entry xml:base="https://groverale.sharepoint.com/sites/archiverun/_api/"
+    xmlns="http://www.w3.org/2005/Atom"
+    xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+    xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+    xmlns:georss="http://www.georss.org/georss" xmlns:gml="http://www.opengis.net/gml">
+    <id>https://groverale.sharepoint.com/sites/archiverun/_api/Web/GetFolderByServerRelativePath(decodedurl='/sites/archiverun/Shared
+        Documents')</id>
+    <category term="SP.Folder" scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
+    <link rel="edit"
+        href="Web/GetFolderByServerRelativePath(decodedurl='/sites/archiverun/Shared%20Documents')" />
+    <link rel="http://schemas.microsoft.com/ado/2007/08/dataservices/related/StorageMetrics"
+        type="application/atom+xml;type=entry" title="StorageMetrics"
+        href="Web/GetFolderByServerRelativePath(decodedurl='/sites/archiverun/Shared%20Documents')/StorageMetrics">
+        <m:inline>
+            <entry>
+                <id>https://groverale.sharepoint.com/sites/archiverun/_api/Web/GetFolderByServerRelativePath(decodedurl='/sites/archiverun/Shared
+                    Documents')/StorageMetrics</id>
+                <category term="SP.StorageMetrics"
+                    scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
+                <link rel="edit"
+                    href="Web/GetFolderByServerRelativePath(decodedurl='/sites/archiverun/Shared%20Documents')/StorageMetrics" />
+                <title />
+                <updated>2023-09-21T14:28:31Z</updated>
+                <author>
+                    <name />
+                </author>
+                <content type="application/xml">
+                    <m:properties>
+                        <d:LastModified m:type="Edm.DateTime">2023-09-21T14:17:09Z</d:LastModified>
+                        <d:TotalFileCount m:type="Edm.Int64">2</d:TotalFileCount>
+                        <d:TotalFileStreamSize m:type="Edm.Int64">38907</d:TotalFileStreamSize>
+                        <d:TotalSize m:type="Edm.Int64">131293</d:TotalSize>
+                    </m:properties>
+                </content>
+            </entry>
+        </m:inline>
+    </link>
+    <title />
+    <updated>2023-09-21T14:28:31Z</updated>
+    <author>
+        <name />
+    </author>
+    <content type="application/xml" />
+</entry>
