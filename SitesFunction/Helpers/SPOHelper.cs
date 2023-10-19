@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace groveale
 {
@@ -46,12 +47,9 @@ namespace groveale
 
             clientContext.ExecuteQuery();
 
+            // we need the token to use for a REST call 
             var token = clientContext.GetAccessToken();
 
-            
-
-            //var folderWithStorageMetrics = PnPContext.Web.GetFolderByServerRelativeUrlAsync(list.RootFolder.ServerRelativeUrl, f => f.StorageMetrics).GetAwaiter().GetResult();
-                
             var storageMetrics = await GetFolderStorageMetrics(clientContext.Site.Url, list.RootFolder.ServerRelativeUrl, token);
 
             listDetail.ListId = list.Id.ToString();
@@ -82,10 +80,16 @@ namespace groveale
                 response.EnsureSuccessStatusCode();
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                dynamic data = JsonConvert.DeserializeObject(responseContent);
+
+                dynamic data = JObject.Parse(responseContent);
 
                 // object casting still neded
-                return data.d.StorageMetrics;
+                return new StorageMetrics {
+                    LastModified = data.d.StorageMetrics.LastModified,
+                    TotalFileCount = data.d.StorageMetrics.TotalFileCount,
+                    TotalFileStreamSize = data.d.StorageMetrics.TotalFileStreamSize,
+                    TotalSize = data.d.StorageMetrics.TotalSize
+                };
             }
         }
     }
