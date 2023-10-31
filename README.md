@@ -4,6 +4,7 @@ Welcome to our SharePoint Online Governance and Storage Utilization Dashboard! T
 
 ![Sites Dashboard](resources\site-dash.png)
 
+
 **Stay In Control**: With our SharePoint Online Governance and Storage Utilization Dashboard, you can take the reins of your SharePoint environment, ensuring it remains a secure, organized, and efficient platform for your organization's collaboration and content management needs.
 
 ## Key Objectives
