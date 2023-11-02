@@ -59,7 +59,7 @@ namespace groveale
             listDetail.ListHasUniquePermissions = list.HasUniqueRoleAssignments;
             listDetail.IsIndexed = !list.NoCrawl;
             listDetail.ListSizeTotalUsed = storageMetrics != null ? storageMetrics.TotalSize : 0;
-            listDetail.ListLastItemModifiedDate = storageMetrics.LastModified;
+            //listDetail.ListLastItemModifiedDate = storageMetrics.LastModified;
             listDetail.PreviousVersionsSize = listDetail.ListSizeTotalUsed - listDetail.DriveSizeUsed;
 
             return listDetail;

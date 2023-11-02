@@ -111,7 +111,7 @@ namespace groveale
                     ListType = drive.DriveType,
                     ListUrl = drive.WebUrl,
                     ListCreatedDate = drive.CreatedDateTime ?? DateTime.MinValue,
-                    ListLastItemModifiedDate = drive.LastModifiedDateTime ?? DateTime.MinValue,
+                    ListLastItemModifiedDate = drive.LastModifiedDateTime ?? drive.CreatedDateTime.Value,
                     DriveSizeUsed = await GetDriveSize(drive.Id)
                 };
 

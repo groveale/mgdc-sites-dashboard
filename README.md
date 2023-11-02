@@ -2,7 +2,7 @@
 
 Welcome to our SharePoint Online Governance and Storage Utilization Dashboard! This powerful tool combines data from Microsoft Graph Data Connect (MGDC), SharePoint APIs, and Microsoft Graph to provide SPO administrators and site owners with valuable insights into their SharePoint environment.
 
-![Sites Dashboard](resources\site-dash.png)
+![Sites Dashboard](resources/site-dash.png)
 
 
 **Stay In Control**: With our SharePoint Online Governance and Storage Utilization Dashboard, you can take the reins of your SharePoint environment, ensuring it remains a secure, organized, and efficient platform for your organization's collaboration and content management needs.
